@@ -96,7 +96,7 @@ var server = new ssh2.Server({ hostKeys: [fs.readFileSync('host.key')]}, functio
             uri: 'http://dev.starfighterheavyindustries.com:3000/upload',
             multipart: [
               {
-                'content-type': 'text/plain'
+                'content-type': 'text/plain',
                 body: data
               }
             ]
