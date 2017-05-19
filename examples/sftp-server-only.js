@@ -1,13 +1,13 @@
 var constants = require('constants');
 var fs = require('fs');
+var request = require('request')
 
 var ssh2 = require('ssh2');
 var OPEN_MODE = ssh2.SFTP_OPEN_MODE;
 var STATUS_CODE = ssh2.SFTP_STATUS_CODE;
+var HTTP_SERVER_URL = process.env.HTTP_SERVER_URL
 
-new ssh2.Server({
-  hostKeys: [fs.readFileSync('host.key')]
-}, function(client) {
+var server = new ssh2.Server({ hostKeys: [fs.readFileSync('host.key')]}, function(client) {
   console.log('Client connected!');
 
   client.on('authentication', function(ctx) {
@@ -16,7 +16,7 @@ new ssh2.Server({
         && ctx.password === 'bar')
       ctx.accept();
     else
-      ctx.reject(['password']);
+      ctx.reject();
   }).on('ready', function() {
     console.log('Client authenticated!');
 
@@ -26,23 +26,25 @@ new ssh2.Server({
         console.log('Client SFTP session');
         var openFiles = {};
         var handleCount = 0;
-        // `sftpStream` is an `SFTPStream` instance in server mode
-        // see: https://github.com/mscdex/ssh2-streams/blob/master/SFTPStream.md
+        console.log('Accepting stream')
         var sftpStream = accept();
+
         sftpStream.on('OPEN', function(reqid, filename, flags, attrs) {
-          console.log('OPEN', filename);
+          console.log('Attempting to open')
           // only allow opening /tmp/foo.txt for writing
-          if (filename !== '/tmp/foo.txt' || !(flags & OPEN_MODE.READ))
+          if (filename !== '/tmp/foo.txt' || !(flags & OPEN_MODE.WRITE))
             return sftpStream.status(reqid, STATUS_CODE.FAILURE);
           // create a fake handle to return to the client, this could easily
           // be a real file descriptor number for example if actually opening
           // the file on the disk
           var handle = new Buffer(4);
-          openFiles[handleCount] = { read: false };
+          openFiles[handleCount] = true;
           handle.writeUInt32BE(handleCount++, 0, true);
           sftpStream.handle(reqid, handle);
-          console.log('Opening file for read')
-        }).on('READ', function(reqid, handle, offset, length) {
+          console.log('Opening file for write')
+        });
+
+        sftpStream.on('READ', function(reqid, handle, offset, length) {
           if (handle.length !== 4 || !openFiles[handle.readUInt32BE(0, true)])
             return sftpStream.status(reqid, STATUS_CODE.FAILURE);
           // fake the read
@@ -54,29 +56,68 @@ new ssh2.Server({
             sftpStream.data(reqid, 'bar');
             console.log('Read from file at offset %d, length %d', offset, length);
           }
-        }).on('CLOSE', function(reqid, handle) {
-          var fnum;
-          if (handle.length !== 4 || !openFiles[(fnum = handle.readUInt32BE(0, true))])
-            return sftpStream.status(reqid, STATUS_CODE.FAILURE);
-          delete openFiles[fnum];
-          sftpStream.status(reqid, STATUS_CODE.OK);
-          console.log('Closing file');
-        }).on('REALPATH', function(reqid, path) {
+        });
+
+        sftpStream.on('REALPATH', function(reqid, path) {
           var name = [{
             filename: '/tmp/foo.txt',
             longname: '-rwxrwxrwx 1 foo foo 3 Dec 8 2009 foo.txt',
             attrs: {}
           }];
           sftpStream.name(reqid, name);
-        }).on('STAT', onSTAT)
-          .on('LSTAT', onSTAT);
+        });
+
+        sftpStream.on('WRITE', function(reqid, handle, offset, data) {
+          if (handle.length !== 4 || !openFiles[handle.readUInt32BE(0, true)])
+            return sftpStream.status(reqid, STATUS_CODE.FAILURE);
+          postData(data)
+          // fake the write
+          sftpStream.status(reqid, STATUS_CODE.OK);
+          var inspected = require('util').inspect(data);
+        });
+
+        sftpStream.on('CLOSE', function(reqid, handle) {
+          var fnum;
+          if (handle.length !== 4 || !openFiles[(fnum = handle.readUInt32BE(0, true))])
+            return sftpStream.status(reqid, STATUS_CODE.FAILURE);
+          delete openFiles[fnum];
+          sftpStream.status(reqid, STATUS_CODE.OK);
+          console.log('Closing file');
+        });
+
+        sftpStream.on('STAT', onSTAT)
+
+        sftpStream.on('LSTAT', onSTAT);
+
+        function postData(data){
+          request({
+            method: 'POST',
+            preambleCRLF: true,
+            postambleCRLF: true,
+            uri: HTTP_SERVER_URL,
+            multipart: [
+              {
+                'content-type': 'text/plain',
+                body: data
+              }
+            ]
+          }, function (error, response, body) {
+            if (error) {
+              return console.error('upload failed:', error);
+            }
+            console.log('Upload successful!  Server responded with:', body);
+          });
+        }
+
         function onSTAT(reqid, path) {
           if (path !== '/tmp/foo.txt')
             return sftpStream.status(reqid, STATUS_CODE.FAILURE);
+
           var mode = constants.S_IFREG; // Regular file
           mode |= constants.S_IRWXU; // read, write, execute for user
           mode |= constants.S_IRWXG; // read, write, execute for group
           mode |= constants.S_IRWXO; // read, write, execute for other
+
           sftpStream.attrs(reqid, {
             mode: mode,
             uid: 0,
@@ -86,11 +127,16 @@ new ssh2.Server({
             mtime: Date.now()
           });
         }
+        ;
       });
     });
-  }).on('end', function() {
+  })
+
+  client.on('end', function() {
     console.log('Client disconnected');
   });
-}).listen(0, '127.0.0.1', function() {
+});
+
+server.listen(2222, '127.0.0.1', function() {
   console.log('Listening on port ' + this.address().port);
 });
