@@ -58,3 +58,5 @@ Uploading ./test.txt to /tmp/foo.txt
 ```
 
 And you should see a successful multipart POST call made to the HTTP_SERVER_URL with `Content-Type: text/plain`.
+
+Note that the POST call will happen asynchronously to the SFTP request you make and therefore may arrive after the SFTP call completes.
