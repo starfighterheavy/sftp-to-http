@@ -38,16 +38,16 @@ Start your server:
 npm run-script run
 ```
 
-This will start a running server listening on port 2222. To connect to the server:
+This will start a running server listening on port 2222. To connect to the server (assuming you've added the host to your IdentifyFile):
 
 ```
-sftp -i [keydirectory]/[keyname].pub -p 2222 foo@localhost
+sftp -p 2222 localhost
 ```
 
 To run a basic test, you can put the file `examples/test.txt`. It doesn't matter what the destination is, since the file will not be written to disk.
 
 ```
-put /[pathtoproject]/examples/test.txt /tmp/foo.txt
+put /[pathtoproject]/examples/test.txt /anywhere
 ```
 
 You should see (something like) the following return:
