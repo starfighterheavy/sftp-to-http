@@ -51,7 +51,6 @@ put /[pathtoproject]/examples/test.txt /tmp/foo.txt
 You should see (something like) the following return:
 
 ```
->>>>>>> 0a09ad8... Updating readme
 Uploading ./test.txt to /tmp/foo.txt
 ./test.txt                                                                100%  737     0.7KB/s   00:00
 ```
