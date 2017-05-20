@@ -57,4 +57,4 @@ Uploading ./test.txt to /tmp/foo.txt
 ./test.txt                                                                100%  737     0.7KB/s   00:00
 ```
 
-And you should see a successful `POST` call made to the HTTP URL you specified in your `package.json`.
+And you should see a successful multipart POST call made to the HTTP_SERVER_URL with `Content-Type: text/plain`.
