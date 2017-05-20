@@ -6,6 +6,7 @@ var ssh2 = require('ssh2');
 var OPEN_MODE = ssh2.SFTP_OPEN_MODE;
 var STATUS_CODE = ssh2.SFTP_STATUS_CODE;
 var HTTP_SERVER_URL = process.env.HTTP_SERVER_URL
+var SFTP_SERVER_PORT = process.env.SFTP_SERVER_PORT
 
 var server = new ssh2.Server({ hostKeys: [fs.readFileSync('host.key')]}, function(client) {
   console.log('Client connected!');
@@ -137,6 +138,6 @@ var server = new ssh2.Server({ hostKeys: [fs.readFileSync('host.key')]}, functio
   });
 });
 
-server.listen(2222, '127.0.0.1', function() {
+server.listen(SFTP_SERVER_PORT, '127.0.0.1', function() {
   console.log('Listening on port ' + this.address().port);
 });
