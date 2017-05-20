@@ -3,7 +3,7 @@
   "author": "Jonathan Kirst <jskirst@gmail.com>",
   "description": "SSH2 server that posts files to http endpoint, based on the ssh2 (mscdex/ssh2) module written by Brian White <mscdex@mscdex.net>",
   "main": "./lib/client",
-  "engines": { "node": ">=0.10.0" },
+  "engines": { "node": ">=0.2.0" },
   "dependencies": {
     "ssh2-streams": "~0.1.15"
   },
@@ -11,7 +11,7 @@
     "semver": "^5.1.0"
   },
   "scripts": {
-    "run": "node examples/sftp-server-only.js",
+    "run": "node lib/sftp-to-http.js",
     "test": "node test/test.js"
   },
   "keywords": [ "ssh", "ssh2", "sftp", "secure", "shell", "exec", "remote", "client" ],
