@@ -12,10 +12,22 @@ var server = new ssh2.Server({ hostKeys: [fs.readFileSync('host.key')]}, functio
   console.log('Client connected!');
 
   client.on('authentication', function(ctx) {
-    if (ctx.method === 'password'
-        && ctx.username === 'foo'
-        && ctx.password === 'bar')
-      ctx.accept();
+    if (ctx.method === 'publickey'
+             && ctx.key.algo === pubKey.fulltype
+             && buffersEqual(ctx.key.data, pubKey.public)) {
+      if (ctx.signature) {
+        var verifier = crypto.createVerify(ctx.sigAlgo);
+        verifier.update(ctx.blob);
+        if (verifier.verify(pubKey.publicOrig, ctx.signature))
+          ctx.accept();
+        else
+          ctx.reject();
+      } else {
+        // if no signature present, that means the client is just checking
+        // the validity of the given public key
+        ctx.accept();
+      }
+    }
     else
       ctx.reject();
   }).on('ready', function() {
