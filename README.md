@@ -6,11 +6,12 @@ SSH2 server that posts files to http endpoint, based on the ssh2 (mscdex/ssh2) m
 
 # Getting Started
 
-First, set your HTTP_SERVER_URL environment variable to the URL you would like the file contents posted to, and the SFTP_SERVER_PORT you want your SFTP server to listen to.
+First, set your HTTP_SERVER_URL environment variable to the URL you would like the file contents posted to, the SFTP_SERVER_PORT you want your SFTP server to listen to, and the path to your public key file path.
 
 ```
 export HTTP_SERVER_URL=http://example.com
 export SFTP_SERVER_PORT=2222
+export SFTP_SERVER_PORT_KEY_PATH=/home/.../keypath
 ```
 
 Clone the repo to your local workspace.
