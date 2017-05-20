@@ -32,7 +32,7 @@ var server = new ssh2.Server({ hostKeys: [fs.readFileSync('host.key')]}, functio
         sftpStream.on('OPEN', function(reqid, filename, flags, attrs) {
           console.log('Attempting to open')
           // only allow opening /tmp/foo.txt for writing
-          if (filename !== '/tmp/foo.txt' || !(flags & OPEN_MODE.WRITE))
+          if (!(flags & OPEN_MODE.WRITE))
             return sftpStream.status(reqid, STATUS_CODE.FAILURE);
           // create a fake handle to return to the client, this could easily
           // be a real file descriptor number for example if actually opening
