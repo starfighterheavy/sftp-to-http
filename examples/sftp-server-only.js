@@ -1,20 +1,29 @@
 var constants = require('constants');
 var fs = require('fs');
 var request = require('request')
-
 var ssh2 = require('ssh2');
+var crypto = require('crypto');
+var inspect = require('util').inspect;
+var buffersEqual = require('buffer-equal-constant-time');
+var utils = ssh2.utils;
+
 var OPEN_MODE = ssh2.SFTP_OPEN_MODE;
 var STATUS_CODE = ssh2.SFTP_STATUS_CODE;
 var HTTP_SERVER_URL = process.env.HTTP_SERVER_URL
 var SFTP_SERVER_PORT = process.env.SFTP_SERVER_PORT
+var SFTP_SERVER_KEY_PATH = process.env.SFTP_SERVER_KEY_PATH
+
+var pubKey = utils.genPublicKey(utils.parseKey(fs.readFileSync(SFTP_SERVER_KEY_PATH)));
 
 var server = new ssh2.Server({ hostKeys: [fs.readFileSync('host.key')]}, function(client) {
   console.log('Client connected!');
 
   client.on('authentication', function(ctx) {
+    console.log('Attempting to authenticate...')
     if (ctx.method === 'publickey'
              && ctx.key.algo === pubKey.fulltype
              && buffersEqual(ctx.key.data, pubKey.public)) {
+      console.log('Publickey authentication attempt')
       if (ctx.signature) {
         var verifier = crypto.createVerify(ctx.sigAlgo);
         verifier.update(ctx.blob);
