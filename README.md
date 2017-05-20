@@ -42,7 +42,7 @@ This will start a running server listening on port 2222. To connect to the serve
 sftp -i [keydirectory]/[keyname].pub -p 2222 foo@localhost
 ```
 
-To run a basic test, you can put the file `examples/test.txt`.
+To run a basic test, you can put the file `examples/test.txt`. It doesn't matter what the destination is, since the file will not be written to disk.
 
 ```
 put /[pathtoproject]/examples/test.txt /tmp/foo.txt
