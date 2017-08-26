@@ -1,4 +1,6 @@
-# Description
+# Sftp-to-Http
+
+[![Code Climate](https://codeclimate.com/github/starfighterheavy/sfto-to-http/badges/gpa.svg)](https://codeclimate.com/github/starfighterheavy/sfto-to-http)
 
 SSH2 server that posts files to http endpoint, based on the ssh2 (mscdex/ssh2) module written by Brian White <mscdex@mscdex.net>
 
